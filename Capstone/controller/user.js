@@ -1,6 +1,8 @@
 const express = require("express");
-const user = require("../model/user");
+const User = require("../model/user");
 const wallet = require("../service/kas/wallet");
+const node = require("../service/kas/node");
+const conv = require("../utils/conv");
 const router = express.Router();
 
 router.post("/", async (req, res) => {
@@ -25,6 +27,30 @@ router.post("/", async (req, res) => {
 
   res.json({
     address: account.address,
+  });
+});
+
+// TODO: get Klay API implementation
+router.get("/:user/klay", async (req, res) => {
+  const address = await conv.userTodoAddress(req.params.user);
+  const balance = await node.getBalance(address);
+
+  res.json({
+    balance,
+  });
+});
+
+// TODO: POST /v1/user/:user/klay API
+router.post("/:user/klay", async (req, res) => {
+  const from = await conv.userTodoAddress(req.params.user);
+  const to = await conv.userTodoAddress(req.body.to);
+  const amount = req.body.amount;
+  console.log(from, to, amount);
+
+  const txHash = await wallet.sendTransfer(from, to, amount);
+
+  res.json({
+    txHash,
   });
 });
 
